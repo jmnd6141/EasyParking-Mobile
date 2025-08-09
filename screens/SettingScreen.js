@@ -7,7 +7,9 @@ import Button from '../components/Button';
 import Bar from '../components/PresentationBar';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { updatePassword, logout } from '../redux/features/userSlice';
+import {logout as LogoutRedux } from '../redux/features/userSlice';
+import { modifyPassword } from '../apiCalls/modifyPassword';
+import { logout } from '../apiCalls/login';
 
 export default function SettingScreen() {
   const dispatch = useDispatch();
@@ -25,7 +27,9 @@ export default function SettingScreen() {
     return minLength && hasUpperCase && hasLowerCase && hasSpecialChar;
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
+    const next = newPassword.trim();
+
     if (!currentPassword.trim() || !newPassword.trim()) {
       return Alert.alert('Erreur', 'Tous les champs sont obligatoires.');
     }
@@ -45,11 +49,11 @@ export default function SettingScreen() {
     }
 
     try {
-      dispatch(updatePassword(newPassword)); 
+      await modifyPassword({  username: user, newPassword: next });
       Alert.alert('Succès', 'Mot de passe mis à jour avec succès.');
       setCurrentPassword('');
       setNewPassword('');
-      return navigation.goBack();
+      await handleLogout();
     } catch (error) {
       Alert.alert(
         'Erreur',
@@ -58,9 +62,10 @@ export default function SettingScreen() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      dispatch(logout());
+      await logout();
+      dispatch(LogoutRedux());
       navigation.replace('ConnectScreen'); 
     } catch (error) {
       console.log(error);
