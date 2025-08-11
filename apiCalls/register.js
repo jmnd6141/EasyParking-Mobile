@@ -1,7 +1,6 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
-
-const API_BASE_URL = 'http://172.20.10.4:3001';
+import { API_BASE_URL } from '../config';
 
 export const register = async ({ firstname, lastname, username, password, dateOfBirth }) => {
     

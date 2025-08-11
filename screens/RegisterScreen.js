@@ -1,4 +1,4 @@
-import {React, useState, useContext} from 'react';
+import { useState} from 'react';
 import { Alert, View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import GoBack from '../components/GoBack';
@@ -6,7 +6,6 @@ import ChampField from '../components/ChampField';
 import DatePicker from '../components/DatePicker';
 import Button from '../components/Button';
 import { register } from '../apiCalls/register'; 
-import dayjs from 'dayjs';
 
 export default function RegisterScreen() {
   const navigation = useNavigation();

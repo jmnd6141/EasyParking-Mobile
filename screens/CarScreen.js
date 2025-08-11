@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import Logo from '../components/LogoAndTitle';
 import ProfileLocationCard from '../components/ProfileLocationCard';

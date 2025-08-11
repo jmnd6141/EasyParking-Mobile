@@ -1,5 +1,5 @@
-// MapScreen.js
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, StyleSheet as RNStyle } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';

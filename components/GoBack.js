@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Vérifiez bien ce package
 import { useNavigation } from '@react-navigation/native';

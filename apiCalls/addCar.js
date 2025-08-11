@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-const API_BASE_URL = 'http://172.20.10.4:3001';
+import { API_BASE_URL } from '../config';
 
 export const addCar = async ({licensePlate, model, username}) => {
   try {

@@ -1,6 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, icon} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import { TouchableOpacity,Text, StyleSheet} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
 export default function SocialButton (props) {
