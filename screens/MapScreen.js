@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TextInput, StyleSheet as RNStyle } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -12,6 +11,7 @@ export default function MapScreen() {
   const [parkings, setParkings] = useState([]);
   const [search, setSearch] = useState('');
   const navigation = useNavigation();
+  const mapRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -38,6 +38,22 @@ export default function MapScreen() {
     })();
   }, [search]);
 
+  const focusOnParking = (p) => {
+    if (!p?.coordinates) return;
+    const [lat, lon] = String(p.coordinates).split(',').map(s => Number(String(s).trim()));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || !mapRef.current) return; 
+    mapRef.current.animateCamera(
+      { center: { latitude: lat, longitude: lon }, zoom: 16 },
+      { duration: 800 }
+    );
+  };
+
+  useEffect(() => {
+    if (search.trim() && parkings.length) {
+      focusOnParking(parkings[0]);
+    }
+  }, [parkings]);
+
   if (!location) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -49,8 +65,9 @@ export default function MapScreen() {
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}                  // 👈 important
         provider={PROVIDER_GOOGLE}
-        style={RNStyle.absoluteFillObject}   // map = plein écran dans son wrapper
+        style={RNStyle.absoluteFillObject}
         initialRegion={{
           latitude: location.latitude,
           longitude: location.longitude,
@@ -62,21 +79,26 @@ export default function MapScreen() {
         followsUserLocation
       >
         {parkings.map((p) => {
-          const [lat, lon] = (p.coordinates || '').split(',').map(Number);
+          const [lat, lon] = String(p.coordinates || '')
+            .split(',')
+            .map(s => Number(String(s).trim()));
           if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
           return (
             <Marker
-              key={p.parking_id ?? `${lat},${lon}`}
+              key={p.parking_id ?? p.id ?? `${lat},${lon}`}
               coordinate={{ latitude: lat, longitude: lon }}
               title={p.name}
               description={p.places != null ? `Places disponibles : ${p.places}` : undefined}
-              onPress={() => navigation.navigate('ParkingDetailsScreen', { parking: p })}
+              onPress={() => {
+                focusOnParking(p);
+                navigation.navigate('ParkingDetailsScreen', { parking: p });
+              }}
             />
           );
         })}
       </MapView>
 
-      {/* Barre de recherche en overlay (ne pousse pas la map) */}
+      {/* Barre de recherche en overlay */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -85,6 +107,10 @@ export default function MapScreen() {
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
+          // 👇 si tu préfères centrer seulement à "Entrée"
+          onSubmitEditing={() => {
+            if (parkings.length) focusOnParking(parkings[0]);
+          }}
         />
       </View>
     </View>
@@ -94,7 +120,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#151A23' },
   center: { justifyContent: 'center', alignItems: 'center' },
-
   searchContainer: {
     position: 'absolute',
     top: 8, left: 12, right: 12,

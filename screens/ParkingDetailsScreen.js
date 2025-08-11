@@ -83,17 +83,13 @@ export default function ParkingDetailsScreen({ route }) {
       nextReserved = false;
       nextCount = prevCount + 1;
     }
-
-    // Optimistic UI
     setSaving(true);
     setIsReserved(nextReserved);
     setAvailablePlaces(nextCount);
 
     try {
-      // IMPORTANT: le serveur attend parking_id, pas id
       await updateParking({ parking_id: parking.parking_id, places: nextCount });
     } catch (e) {
-      // rollback
       setIsReserved(prevReserved);
       setAvailablePlaces(prevCount);
 

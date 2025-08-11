@@ -14,7 +14,6 @@ export const getAllParkings = async (search = '') => {
   throw new Error('Erreur lors de la récupération des parkings');
 };
 
-// GET /parking/:parking_id
 export const getParkingID = async (parking_id) => {
   const token = await SecureStore.getItemAsync('userToken');
   if (!token) throw new Error('Token non disponible');
@@ -27,12 +26,10 @@ export const getParkingID = async (parking_id) => {
   throw new Error("Erreur lors de la récupération du parking");
 };
 
-// PATCH /parking/   body: { parking_id, places }
 export const updateParking = async ({ parking_id, places }) => {
   const token = await SecureStore.getItemAsync('userToken');
   if (!token) throw new Error('Token non disponible');
 
-  // on force les types propres pour éviter un 400 bête
   const payload = { parking_id: Number(parking_id), places: Number(places) };
 
   const response = await axios.patch(
@@ -43,7 +40,6 @@ export const updateParking = async ({ parking_id, places }) => {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      // Au cas où le serveur renvoie 204 No Content
       validateStatus: () => true,
     }
   );
@@ -51,8 +47,6 @@ export const updateParking = async ({ parking_id, places }) => {
   if (response.status >= 200 && response.status < 300) {
     return response.data ?? { success: true };
   }
-
-  // Propager le message du validator pour comprendre le 400
   const msg = typeof response.data === 'string'
     ? response.data
     : response.data?.message || 'Requête invalide';
