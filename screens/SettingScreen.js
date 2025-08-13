@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {logout as LogoutRedux } from '../redux/features/userSlice';
 import { modifyPassword } from '../apiCalls/modifyPassword';
 import { logout } from '../apiCalls/login';
+import GoBack from '../components/GoBack';
 
 export default function SettingScreen() {
   const dispatch = useDispatch();
@@ -75,7 +76,14 @@ export default function SettingScreen() {
 
   return (
     <View style={styles.container}>
-      <Logo />
+      <View style={styles.header}>
+        <View style ={styles.goBack}>
+          <GoBack />
+        </View>
+      </View>
+      <View style={styles.logoWrapper}>
+          <Logo />
+        </View>
       <ProfileLocationCard
         style={styles.topSection}
         title="Bienvenue"
@@ -125,4 +133,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#151A23',
   },
+  header: {
+    flexDirection: 'row',       
+    alignItems: 'left',    
+    width: '100%',
+    marginTop: -100,
+    marginLeft: -100,     
+    position: 'relative',
+  },
+  goBack : {
+    marginTop: 100,   
+    position: 'relative',
+    
+  }
 });

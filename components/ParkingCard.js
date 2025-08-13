@@ -8,8 +8,6 @@ export default function ParkingCard(props) {
   return (
     <View style={styles.container}>
       <ProfileLocationCard style={styles.topSection} title={props.title} information={props.info} />
-
-      {/* Section des informations */}
       <View style={styles.detailsContainer}>
         <View style={styles.detail}>
           <Text style={styles.detailLabel}>Distance</Text>
@@ -28,8 +26,6 @@ export default function ParkingCard(props) {
           <Text style={styles.detailValue}>{props.opening}</Text>
         </View>
       </View>
-
-      {/* Section des boutons */}
       <View style={styles.buttonContainer}>
         <Button
           style={styles.button}

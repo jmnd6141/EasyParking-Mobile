@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config';
 
 export const getAllCarsByUser = async () => {
   try {
-    const jwtToken = await SecureStore.getItemAsync('userToken'); // Récupérer le JWT token
+    const jwtToken = await SecureStore.getItemAsync('userToken');
     if (!jwtToken) throw new Error('Utilisateur non authentifié');
 
     const response = await axios.get(`${API_BASE_URL}/car/me`, {
@@ -13,7 +13,7 @@ export const getAllCarsByUser = async () => {
       },
     });
     if (response.status === 200) {
-      return response.data; // Retourne les données des voitures
+      return response.data;
     } else {
       throw new Error('Impossible de récupérer les voitures');
     }

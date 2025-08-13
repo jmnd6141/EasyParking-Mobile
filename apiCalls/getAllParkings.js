@@ -39,8 +39,7 @@ export const updateParking = async ({ parking_id, places }) => {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
+      }
     }
   );
 

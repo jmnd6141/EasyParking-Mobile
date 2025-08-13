@@ -3,12 +3,12 @@ import { View, Text, Button, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function DatePicker({ label, date, onChangeDate }) {
-  const [showPicker, setShowPicker] = useState(false); // Contrôle l'affichage du date picker
+  const [showPicker, setShowPicker] = useState(false);
 
   const handleDateChange = (event, selectedDate) => {
-    setShowPicker(false); // Masque le picker après la sélection
+    setShowPicker(false);
     if (selectedDate) {
-      onChangeDate(selectedDate); // Passe la date au composant parent
+      onChangeDate(selectedDate);
     }
   };
 
@@ -29,9 +29,9 @@ export default function DatePicker({ label, date, onChangeDate }) {
 
       {showPicker && (
         <DateTimePicker
-          value={date || new Date()} // Utilise la date actuelle comme valeur par défaut
-          mode="date" // Mode pour sélectionner uniquement la date
-          display="default" // Affichage par défaut du date picker
+          value={date || new Date()}
+          mode="date"
+          display="default"
           onChange={handleDateChange}
         />
       )}

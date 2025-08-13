@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config';
 
 export const modifyPassword = async ({username, newPassword}) => {
   try {
-    const jwtToken = await SecureStore.getItemAsync('userToken'); // Récupérer le jeton JWT
+    const jwtToken = await SecureStore.getItemAsync('userToken');
     if (!jwtToken) throw new Error('Utilisateur non authentifié');
 
     const updateResponse = await axios.patch(`${API_BASE_URL}/user/me`, {

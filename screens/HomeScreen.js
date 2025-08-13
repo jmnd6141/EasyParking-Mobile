@@ -19,7 +19,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header fixe */}
       <View style={styles.header}>
         <ProfileLocationCard
           style={styles.topSection}
@@ -29,8 +28,6 @@ export default function HomeScreen() {
           icon="account"
         />
       </View>
-
-      {/* Zone map qui prend tout le reste */}
       <View style={styles.mapWrapper}>
         <MapScreen />
       </View>
@@ -49,8 +46,6 @@ const styles = StyleSheet.create({
     marginTop: 70,
     paddingBottom: '5%',
   },
-
-  // 👉 c'est CETTE vue qui donne l'espace à la map
   mapWrapper: {
     flex: 1,
     width: '100%',

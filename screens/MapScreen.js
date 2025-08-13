@@ -65,7 +65,7 @@ export default function MapScreen() {
   return (
     <View style={styles.container}>
       <MapView
-        ref={mapRef}                  // 👈 important
+        ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={RNStyle.absoluteFillObject}
         initialRegion={{
@@ -97,8 +97,6 @@ export default function MapScreen() {
           );
         })}
       </MapView>
-
-      {/* Barre de recherche en overlay */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -107,7 +105,6 @@ export default function MapScreen() {
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
-          // 👇 si tu préfères centrer seulement à "Entrée"
           onSubmitEditing={() => {
             if (parkings.length) focusOnParking(parkings[0]);
           }}

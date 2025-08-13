@@ -8,7 +8,6 @@ export default function ProfileLocationCard(props){
       style={[styles.container, props.style]} 
       onPress={props.onPress}
     >
-        
             <View style={styles.iconContainer}>
                 <MaterialCommunityIcons name={props.icon} size={20} color="white"/>
             </View>

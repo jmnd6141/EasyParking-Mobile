@@ -1,6 +1,6 @@
 
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Vérifiez bien ce package
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 export default function GoBack(props) {
@@ -20,9 +20,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 40, // Hauteur standard d'une AppBar
+    height: 40,
     paddingHorizontal: 80,
-    elevation: 0, // Ajout d'une ombre pour un effet visuel
+    elevation: 0,
   },
   backButton: {
     

@@ -3,6 +3,10 @@ import { View, StyleSheet, Alert, Linking } from 'react-native';
 import ParkingCard from '../components/ParkingCard';
 import * as Location from 'expo-location';
 import { getParkingID, updateParking } from '../apiCalls/getAllParkings';
+import * as SecureStore from 'expo-secure-store';
+import GoBack from '../components/GoBack';
+
+const ACTIVE_KEY = 'active_reservation_pid';
 
 export default function ParkingDetailsScreen({ route }) {
   const { parking } = route.params;
@@ -12,6 +16,8 @@ export default function ParkingDetailsScreen({ route }) {
   const [availablePlaces, setAvailablePlaces] = useState(parking.places ?? 0);
   const [saving, setSaving] = useState(false);
 
+  const pid = String(parking.parking_id);
+  
   const haversine = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const toRad = (a) => (a * Math.PI) / 180;
@@ -29,10 +35,15 @@ export default function ParkingDetailsScreen({ route }) {
 
     const load = async () => {
       try {
-        const fresh = await getParkingID(parking.id);
+        const fresh = await getParkingID(parking.parking_id);
         if (mounted && typeof fresh?.places === 'number') {
           setAvailablePlaces(fresh.places);
         }
+      } catch {}
+
+      try {
+        const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
+        if (mounted) setIsReserved(activePid === pid);
       } catch {}
 
       try {
@@ -61,10 +72,18 @@ export default function ParkingDetailsScreen({ route }) {
 
     load();
     return () => { mounted = false; };
-  }, [parking.id]);
+  }, [parking.parking_id, pid]);
 
   const handleReservation = async () => {
-    if (saving || availablePlaces == null) return;
+    if (!isReserved) {
+      try {
+        const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
+        if (activePid && activePid !== pid) {
+          Alert.alert('Réservation existante', 'Vous avez déjà réservé dans un autre parking.');
+          return;
+        }
+      } catch {}
+    }
 
     const prevReserved = isReserved;
     const prevCount = availablePlaces;
@@ -72,7 +91,7 @@ export default function ParkingDetailsScreen({ route }) {
     let nextReserved = prevReserved;
     let nextCount = prevCount;
 
-    if (!prevReserved) {
+    if (!isReserved) {
       if (prevCount <= 0) {
         Alert.alert('Erreur', 'Aucune place disponible.');
         return;
@@ -83,15 +102,38 @@ export default function ParkingDetailsScreen({ route }) {
       nextReserved = false;
       nextCount = prevCount + 1;
     }
+
     setSaving(true);
     setIsReserved(nextReserved);
     setAvailablePlaces(nextCount);
+
+    try {
+      if (nextReserved) {
+        await SecureStore.setItemAsync(ACTIVE_KEY, pid);
+      } else {
+        const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
+        if (activePid === pid) {
+          await SecureStore.deleteItemAsync(ACTIVE_KEY);
+        }
+      }
+    } catch {}
 
     try {
       await updateParking({ parking_id: parking.parking_id, places: nextCount });
     } catch (e) {
       setIsReserved(prevReserved);
       setAvailablePlaces(prevCount);
+
+      try {
+        if (prevReserved) {
+          await SecureStore.setItemAsync(ACTIVE_KEY, pid);
+        } else {
+          const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
+          if (activePid === pid) {
+            await SecureStore.deleteItemAsync(ACTIVE_KEY);
+          }
+        }
+      } catch {}
 
       const status = e?.status || e?.response?.status || 'inconnu';
       const raw = e?.data || e?.response?.data;
@@ -124,6 +166,12 @@ export default function ParkingDetailsScreen({ route }) {
 
   return (
     <View style={styles.container}>
+
+      <View style={styles.header}>
+            <View style ={styles.goBack}>
+            <GoBack />
+            </View>
+            </View>
       <ParkingCard
         title={parking.name}
         info=""
@@ -141,4 +189,17 @@ export default function ParkingDetailsScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#151A23' },
+    header: {
+    flexDirection: 'row',       
+    alignItems: 'left',    
+    width: '100%',
+    marginTop: -100,
+    marginLeft: -100,     
+    position: 'relative',
+  },
+  goBack : {
+    marginTop: 100,   
+    position: 'relative',
+    
+  }
 });
