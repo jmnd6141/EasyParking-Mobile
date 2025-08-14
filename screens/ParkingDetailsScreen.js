@@ -1,12 +1,23 @@
-import { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert, Linking } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Alert, Linking, Platform } from 'react-native';
 import ParkingCard from '../components/ParkingCard';
 import * as Location from 'expo-location';
 import { getParkingID, updateParking } from '../apiCalls/getAllParkings';
 import * as SecureStore from 'expo-secure-store';
 import GoBack from '../components/GoBack';
+import * as Notifications from 'expo-notifications';
 
 const ACTIVE_KEY = 'active_reservation_pid';
+const START_AT_KEY = 'active_reservation_started_at'; 
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function ParkingDetailsScreen({ route }) {
   const { parking } = route.params;
@@ -14,8 +25,11 @@ export default function ParkingDetailsScreen({ route }) {
   const [travelTime, setTravelTime] = useState(null);
   const [isReserved, setIsReserved] = useState(false);
   const [availablePlaces, setAvailablePlaces] = useState(parking.places ?? 0);
+  const [elapsedText, setElapsedText] = useState(''); 
   const pid = String(parking.parking_id);
-  
+
+  const timerRef = useRef(null); 
+
   const haversine = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const toRad = (a) => (a * Math.PI) / 180;
@@ -27,6 +41,55 @@ export default function ParkingDetailsScreen({ route }) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+
+  const formatElapsed = (ms) => {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const pad = (n) => (n < 10 ? `0${n}` : `${n}`);
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  };
+
+  const startTimer = async (startedAtMs) => {
+    stopTimer();
+    setElapsedText(formatElapsed(Date.now() - startedAtMs));
+    timerRef.current = setInterval(() => {
+      setElapsedText(formatElapsed(Date.now() - startedAtMs));
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setElapsedText('');
+  };
+
+  const notify = async (title, body) => {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: { title, body},
+        trigger: null,
+
+      });
+    } catch {}
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.DEFAULT,
+          });
+        }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     let isScreenActive = true;
@@ -41,20 +104,28 @@ export default function ParkingDetailsScreen({ route }) {
 
       try {
         const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
-        if (isScreenActive) setIsReserved(activePid === pid);
+        const startedAt = await SecureStore.getItemAsync(START_AT_KEY);
+        const mine = activePid === pid;
+        if (isScreenActive) {
+          setIsReserved(mine);
+          if (mine && startedAt && Number.isFinite(Number(startedAt))) {
+            startTimer(Number(startedAt));
+          } else {
+            stopTimer();
+          }
+        }
       } catch {}
 
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission refusée', "Impossible d'accéder à la localisation.");
-          return;
+          return Alert.alert(
+            'Localisation indisponible', "Impossible de récupérer votre position.");
         }
         const current = await Location.getCurrentPositionAsync({});
         const [lat, lon] = (parking.coordinates || '')
           .split(',')
           .map((s) => Number(String(s).trim()));
-
         if (Number.isFinite(lat) && Number.isFinite(lon)) {
           const d = haversine(current.coords.latitude, current.coords.longitude, lat, lon);
           setDistance(d.toFixed(1));
@@ -64,12 +135,15 @@ export default function ParkingDetailsScreen({ route }) {
           setTravelTime(null);
         }
       } catch {
-        Alert.alert('Erreur', 'Impossible de récupérer la localisation.');
+        Alert.alert('Localisation indisponible', "Impossible de récupérer votre position.");
       }
     };
 
     load();
-    return () => {isScreenActive= false; };
+    return () => {
+      isScreenActive = false;
+      stopTimer();
+    };
   }, [parking.parking_id, pid]);
 
   const handleReservation = async () => {
@@ -77,8 +151,7 @@ export default function ParkingDetailsScreen({ route }) {
       try {
         const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
         if (activePid && activePid !== pid) {
-          Alert.alert('Réservation existante', 'Vous avez déjà réservé dans un autre parking.');
-          return;
+          return Alert.alert('Réservation existante', 'Vous avez déjà réservé dans un autre parking.');
         }
       } catch {}
     }
@@ -91,8 +164,7 @@ export default function ParkingDetailsScreen({ route }) {
 
     if (!isReserved) {
       if (prevCount <= 0) {
-        Alert.alert('Erreur', 'Aucune place disponible.');
-        return;
+        return Alert.alert('Erreur', 'Aucune place disponible.');
       }
       nextReserved = true;
       nextCount = prevCount - 1;
@@ -106,12 +178,19 @@ export default function ParkingDetailsScreen({ route }) {
 
     try {
       if (nextReserved) {
+        const startedAt = Date.now();
         await SecureStore.setItemAsync(ACTIVE_KEY, pid);
+        await SecureStore.setItemAsync(START_AT_KEY, String(startedAt));
+        startTimer(startedAt);
+        notify('Place réservée', `Votre place au parking "${parking.name}" est confirmée.`);
       } else {
         const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
         if (activePid === pid) {
           await SecureStore.deleteItemAsync(ACTIVE_KEY);
+          await SecureStore.deleteItemAsync(START_AT_KEY);
         }
+        stopTimer();
+        notify('Réservation annulée', `Votre réservation au parking "${parking.name}" est annulée.`);
       }
     } catch {}
 
@@ -124,11 +203,15 @@ export default function ParkingDetailsScreen({ route }) {
       try {
         if (prevReserved) {
           await SecureStore.setItemAsync(ACTIVE_KEY, pid);
+          const prevStart = await SecureStore.getItemAsync(START_AT_KEY);
+          if (prevStart) startTimer(Number(prevStart));
         } else {
           const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
           if (activePid === pid) {
             await SecureStore.deleteItemAsync(ACTIVE_KEY);
+            await SecureStore.deleteItemAsync(START_AT_KEY);
           }
+          stopTimer();
         }
       } catch {}
 
@@ -136,7 +219,7 @@ export default function ParkingDetailsScreen({ route }) {
       const raw = e?.data || e?.response?.data;
       const msg = typeof raw === 'string' ? raw : raw?.message || "Échec de la mise à jour du parking.";
       Alert.alert(`Erreur ${status}`, String(msg));
-    } 
+    }
   };
 
   const openItinerary = async (lat, lon) => {
@@ -160,15 +243,15 @@ export default function ParkingDetailsScreen({ route }) {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
-            <View style ={styles.goBack}>
-            <GoBack />
-            </View>
-            </View>
+        <View style={styles.goBack}>
+          <GoBack />
+        </View>
+      </View>
+
       <ParkingCard
         title={parking.name}
-        info=""
+        info={isReserved && elapsedText ? `Temps écoulé : ${elapsedText}` : ''}
         distance={distance ? `${distance} km` : 'N/A'}
         travelTime={travelTime ? `${travelTime} min` : 'N/A'}
         freePlaces={availablePlaces == null ? '...' : `${availablePlaces} libres`}
@@ -183,17 +266,16 @@ export default function ParkingDetailsScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#151A23' },
-    header: {
-    flexDirection: 'row',       
-    alignItems: 'left',    
+  header: {
+    flexDirection: 'row',
+    alignItems: 'left',
     width: '100%',
     marginTop: -100,
-    marginLeft: -100,     
+    marginLeft: -100,
     position: 'relative',
   },
-  goBack : {
-    marginTop: 100,   
+  goBack: {
+    marginTop: 100,
     position: 'relative',
-    
-  }
+  },
 });
