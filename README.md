@@ -1,5 +1,6 @@
 
 EASY PARKING API 🚀
+
 📥 Télécharger le projet
 [Télécharger l'archive ZIP](./Easy-Parking-API-main.zip)
 
@@ -8,11 +9,8 @@ EASY PARKING API 🚀
 
 🛠️ Installation
 
-1️⃣ Téléchargez le fichier ZIP ci-dessus.
 
-2️⃣ Dans le dossier "routes", dans le fichier "parking.js" (ligne 112), à la méthode "router.get('/all', checkJWT, manager, getAllParkings);", il faut enlever "manager".
-
-3️⃣ Exécutez les commandes suivantes pour installer les dépendances et configurer le projet :
+Exécutez les commandes suivantes pour installer les dépendances et configurer le projet :
 
 npm install
 npm pkg set type=module
