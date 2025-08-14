@@ -1,4 +1,9 @@
 
+
+lien figma (maquette) : 
+
+https://www.figma.com/design/38cFck9csUFL2eyBQvfIsQ/Digipark---Parking-Mobile-App?node-id=0-1&t=dmmapWCYhCvhZAey-1
+
 EASY PARKING API 🚀
 
 📥 Télécharger le projet
