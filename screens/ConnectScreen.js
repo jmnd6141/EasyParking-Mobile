@@ -17,6 +17,11 @@ export default function ConnectScreen() {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
+
+    if (!username.trim() || !password.trim()) {
+     return Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+    }
+
     try {
       const { success, token } = await login(username, password);
 
@@ -31,7 +36,6 @@ export default function ConnectScreen() {
       }
     } catch (error) {
       Alert.alert('Erreur',"Nom d'utilisateur ou mot de passe incorrect");
-      console.log(error);
     }
   };
 

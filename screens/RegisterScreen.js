@@ -1,5 +1,5 @@
 import { useState} from 'react';
-import { Alert, View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Alert, View, Text, StyleSheet, ScrollView,  KeyboardAvoidingView, Platform  } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import GoBack from '../components/GoBack';
 import ChampField from '../components/ChampField';
@@ -72,26 +72,36 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.registrer}>
-        <GoBack title="Inscription"/>
-      </View>
-      <ChampField titleLabel="Prénom" titleField="********" onChangeText={setfirstname} value={firstname}/>
-      <ChampField titleLabel="Nom" titleField="********" onChangeText={setlastname} value={lastname}/>
-      <ChampField titleLabel="Utilisateur" titleField="********" onChangeText={setUsername} value={username}/>
+    <KeyboardAvoidingView
+    style={styles.keyboardAvoid}
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    keyboardVerticalOffset={Platform.select({ ios: 8, android: 0 })}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.registrer}>
+          <GoBack title="Inscription"/>
+        </View>
+        <ChampField titleLabel="Prénom" titleField="********" onChangeText={setfirstname} value={firstname}/>
+        <ChampField titleLabel="Nom" titleField="********" onChangeText={setlastname} value={lastname}/>
+        <ChampField titleLabel="Utilisateur" titleField="********" onChangeText={setUsername} value={username}/>
 
-      <ChampField titleLabel="Mot de passe" titleField="********" secureTextEntry={true} onChangeText={setpassword} value={password}/>
-      <ChampField titleLabel="Confirmer le mot de passe" titleField="********" secureTextEntry={true} onChangeText={setConfirmPassword} value={confirmPassword}/>
-      <DatePicker label="Date de naissance" date={dateOfBirth} onChangeDate={setdateOfBirth}/>
+        <ChampField titleLabel="Mot de passe" titleField="********" secureTextEntry={true} onChangeText={setpassword} value={password}/>
+        <ChampField titleLabel="Confirmer le mot de passe" titleField="********" secureTextEntry={true} onChangeText={setConfirmPassword} value={confirmPassword}/>
+        <DatePicker label="Date de naissance" date={dateOfBirth} onChangeDate={setdateOfBirth}/>
 
-      <Text style={styles.frontCondition}>En cliquant sur le bouton Accepter et continuer, vous acceptez 
-        les conditions d'utilisation d’Easy Parking et reconnaissez la politique de confidentialité.</Text>
-      <Button style={styles.button} color="#4FA3D1" title="Accepter et Continuer" onPress={handleRegister}/>
-    </ScrollView>
+        <Text style={styles.frontCondition}>En cliquant sur le bouton Accepter et continuer, vous acceptez 
+          les conditions d'utilisation d’Easy Parking et reconnaissez la politique de confidentialité.</Text>
+        <Button style={styles.button} color="#4FA3D1" title="Accepter et Continuer" onPress={handleRegister}/>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+    backgroundColor: '#151A23',
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',

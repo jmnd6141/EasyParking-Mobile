@@ -21,7 +21,7 @@ export default function MapScreen() {
         const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         setLocation(current.coords);
       } catch (e) {
-        console.log('ERR loc:', e);
+        Alert.alert('Erreur', 'La localisation a été refusée.');
       }
     })();
   }, []);
@@ -32,7 +32,7 @@ export default function MapScreen() {
         const data = await getAllParkings(search);
         setParkings(Array.isArray(data) ? data : (data?.rows ?? []));
       } catch (e) {
-        console.log('ERR parkings:', e);
+        Alert.alert('Erreur', 'Problème survenu pendant la récuperation des parkings.');
         setParkings([]);
       }
     })();

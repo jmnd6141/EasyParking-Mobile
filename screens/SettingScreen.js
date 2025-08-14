@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert,  KeyboardAvoidingView, Platform } from 'react-native';
 import Logo from '../components/LogoAndTitle';
 import ProfileLocationCard from '../components/ProfileLocationCard';
 import ChampField from '../components/ChampField';
@@ -68,65 +68,74 @@ export default function SettingScreen() {
       await logout();
       dispatch(LogoutRedux());
       navigation.replace('ConnectScreen'); 
-    } catch (error) {
-      console.log(error);
+    } catch (error){
       Alert.alert('Erreur', 'Une erreur est survenue lors de la déconnexion.');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style ={styles.goBack}>
-          <GoBack />
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoid}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.select({ ios: 5, android: 0 })} 
+    >
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style ={styles.goBack}>
+            <GoBack />
+          </View>
         </View>
+        <View style={styles.logoWrapper}>
+            <Logo />
+          </View>
+        <ProfileLocationCard
+          style={styles.topSection}
+          title="Bienvenue"
+          information={user}
+          icon="account"
+        />
+        <Bar title="Paramètre(s)" />
+
+        <ChampField
+          titleLabel="Mot de passe actuel"
+          titleField="********"
+          secureTextEntry
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+        />
+        <ChampField
+          titleLabel="Nouveau mot de passe"
+          titleField="********"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
+        <Button
+          title="Mettre à jour le mot de passe"
+          color="#52889F"
+          onPress={handleUpdatePassword}
+        />
+
+        <Button
+          title="Voir mes véhicules"
+          color="#4FA3D1"
+          onPress={() => navigation.navigate('CarScreen')}
+        />
+        <Button
+          title="Se déconnecter"
+          color="red"
+          onPress={handleLogout}
+        />
       </View>
-      <View style={styles.logoWrapper}>
-          <Logo />
-        </View>
-      <ProfileLocationCard
-        style={styles.topSection}
-        title="Bienvenue"
-        information={user}
-        icon="account"
-      />
-      <Bar title="Paramètre(s)" />
-
-      <ChampField
-        titleLabel="Mot de passe actuel"
-        titleField="********"
-        secureTextEntry
-        value={currentPassword}
-        onChangeText={setCurrentPassword}
-      />
-      <ChampField
-        titleLabel="Nouveau mot de passe"
-        titleField="********"
-        secureTextEntry
-        value={newPassword}
-        onChangeText={setNewPassword}
-      />
-      <Button
-        title="Mettre à jour le mot de passe"
-        color="#52889F"
-        onPress={handleUpdatePassword}
-      />
-
-      <Button
-        title="Voir mes véhicules"
-        color="#4FA3D1"
-        onPress={() => navigation.navigate('CarScreen')}
-      />
-      <Button
-        title="Se déconnecter"
-        color="red"
-        onPress={handleLogout}
-      />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+    backgroundColor: '#151A23',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',

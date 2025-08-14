@@ -14,8 +14,6 @@ export default function ParkingDetailsScreen({ route }) {
   const [travelTime, setTravelTime] = useState(null);
   const [isReserved, setIsReserved] = useState(false);
   const [availablePlaces, setAvailablePlaces] = useState(parking.places ?? 0);
-  const [saving, setSaving] = useState(false);
-
   const pid = String(parking.parking_id);
   
   const haversine = (lat1, lon1, lat2, lon2) => {
@@ -31,19 +29,19 @@ export default function ParkingDetailsScreen({ route }) {
   };
 
   useEffect(() => {
-    let mounted = true;
+    let isScreenActive = true;
 
     const load = async () => {
       try {
         const fresh = await getParkingID(parking.parking_id);
-        if (mounted && typeof fresh?.places === 'number') {
+        if (isScreenActive && typeof fresh?.places === 'number') {
           setAvailablePlaces(fresh.places);
         }
       } catch {}
 
       try {
         const activePid = await SecureStore.getItemAsync(ACTIVE_KEY);
-        if (mounted) setIsReserved(activePid === pid);
+        if (isScreenActive) setIsReserved(activePid === pid);
       } catch {}
 
       try {
@@ -71,7 +69,7 @@ export default function ParkingDetailsScreen({ route }) {
     };
 
     load();
-    return () => { mounted = false; };
+    return () => {isScreenActive= false; };
   }, [parking.parking_id, pid]);
 
   const handleReservation = async () => {
@@ -103,7 +101,6 @@ export default function ParkingDetailsScreen({ route }) {
       nextCount = prevCount + 1;
     }
 
-    setSaving(true);
     setIsReserved(nextReserved);
     setAvailablePlaces(nextCount);
 
@@ -138,11 +135,8 @@ export default function ParkingDetailsScreen({ route }) {
       const status = e?.status || e?.response?.status || 'inconnu';
       const raw = e?.data || e?.response?.data;
       const msg = typeof raw === 'string' ? raw : raw?.message || "Échec de la mise à jour du parking.";
-      console.log('PATCH /parking error =>', status, raw);
       Alert.alert(`Erreur ${status}`, String(msg));
-    } finally {
-      setSaving(false);
-    }
+    } 
   };
 
   const openItinerary = async (lat, lon) => {
